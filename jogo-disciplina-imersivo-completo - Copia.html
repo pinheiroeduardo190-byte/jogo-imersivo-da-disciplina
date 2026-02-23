@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Disciplina - Você Está Preparado?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00f3ff;
+            overflow-x: hidden;
+        }
+
+        #starsCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* TELA INICIAL */
+        .intro-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        .intro-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .orb {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #00f3ff, #0080ff);
+            box-shadow: 0 0 60px #00f3ff, 0 0 100px #00f3ff;
+            cursor: pointer;
+            animation: float 4s ease-in-out infinite, pulse-orb 2s ease-in-out infinite;
+            margin-bottom: 60px;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes pulse-orb {
+
+            0%,
+            100% {
+                box-shadow: 0 0 60px #00f3ff;
+            }
+
+            50% {
+                box-shadow: 0 0 100px #00f3ff, 0 0 140px #00f3ff;
+            }
+        }
+
+        .intro-text {
+            font-size: clamp(24px, 4vw, 36px);
+            text-align: center;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px #00f3ff;
+        }
+
+        .dot {
+            display: inline-block;
+            opacity: 0;
+            animation: blink-dot 2s ease-in-out infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes blink-dot {
+
+            0%,
+            20% {
+                opacity: 0;
+            }
+
+            30%,
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* GLITCH SCREEN */
+        .glitch-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .glitch-screen.active {
+            display: flex;
+        }
+
+        .glitch-text {
+            font-size: clamp(32px, 6vw, 64px);
+            font-weight: bold;
+            color: #ff0040;
+            text-shadow: 0 0 30px #ff0040;
+            animation: glitch 0.3s infinite;
+            margin: 30px 0;
+            opacity: 0;
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0);
+            }
+
+            20% {
+                transform: translate(-5px, 5px);
+            }
+
+            40% {
+                transform: translate(5px, -5px);
+            }
+
+            60% {
+                transform: translate(-5px, -5px);
+            }
+
+            80% {
+                transform: translate(5px, 5px);
+            }
+
+            100% {
+                transform: translate(0);
+            }
+        }
+
+        .glitch-text.show {
+            animation: glitch 0.3s infinite, fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* AI SCREEN */
+        .ai-screen {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 40px;
+        }
+
+        .ai-screen.active {
+            display: flex;
+        }
+
+        .ai-orb {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin-bottom: 60px;
+        }
+
+        .ai-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #00f3ff, #0080ff);
+            box-shadow: 0 0 40px #00f3ff;
+            animation: ai-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes ai-pulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        .ai-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid #00f3ff;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .ai-ring:nth-child(1) {
+            width: 120px;
+            height: 120px;
+            animation: rotate-ring 4s linear infinite;
+        }
+
+        .ai-ring:nth-child(2) {
+            width: 160px;
+            height: 160px;
+            animation: rotate-ring 6s linear infinite reverse;
+        }
+
+        .ai-ring:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            animation: rotate-ring 8s linear infinite;
+        }
+
+        @keyframes rotate-ring {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .ai-question {
+            font-size: clamp(24px, 4vw, 36px);
+            color: #000;
+            text-align: center;
+            max-width: 800px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-button {
+            background: #00f3ff;
+            color: #000;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px 60px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.5);
+            transition: all 0.3s;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+        }
+
+        .ai-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 243, 255, 0.7);
+        }
+
+        /* LOADING SCREEN */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 400;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loading-screen.active {
+            display: flex;
+        }
+
+        .loading-title {
+            font-size: clamp(28px, 5vw, 48px);
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px #00f3ff;
+        }
+
+        .loading-bar {
+            width: 400px;
+            max-width: 90%;
+            height: 6px;
+            background: rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .loading-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f3ff, #0080ff, #00f3ff);
+            background-size: 200% 100%;
+            width: 0;
+            animation: loading 3s ease-out forwards, shimmer 1s linear infinite;
+        }
+
+        @keyframes loading {
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes shimmer {
+            from {
+                background-position: 200% 0;
+            }
+
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: rgba(0, 243, 255, 0.8);
+            text-align: center;
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+            padding: 100px 20px;
+        }
+
+        .main-content.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .main-content.hidden {
+            display: none;
+        }
+
+        .section {
+            max-width: 1200px;
+            margin: 0 auto 150px;
+            padding: 60px 40px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .section.glitch-active {
+            animation: mini-glitch 0.2s;
+        }
+
+        @keyframes mini-glitch {
+
+            0%,
+            100% {
+                transform: translate(0);
+            }
+
+            25% {
+                transform: translate(-2px, 2px);
+            }
+
+            75% {
+                transform: translate(2px, -2px);
+            }
+        }
+
+        h2 {
+            font-size: clamp(32px, 6vw, 56px);
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #00f3ff;
+        }
+
+        p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            color: rgba(0, 243, 255, 0.9);
+            margin-bottom: 20px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: #00f3ff;
+            box-shadow: 0 20px 40px rgba(0, 243, 255, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #00f3ff;
+        }
+
+        .feature-desc {
+            font-size: 16px;
+            color: rgba(0, 243, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        /* BOTÃO PENSE COMO DISCIPLINADO */
+        .think-button {
+            display: block;
+            margin: 80px auto;
+            background: linear-gradient(135deg, #00f3ff, #0080ff);
+            color: #000;
+            font-size: 28px;
+            font-weight: bold;
+            padding: 25px 70px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(0, 243, 255, 0.5);
+            transition: all 0.3s;
+        }
+
+        .think-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(0, 243, 255, 0.7);
+        }
+
+        /* TELA DE FUTURO */
+        .future-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 700;
+            display: none;
+            opacity: 0;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .future-screen.active {
+            display: block;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(0, 243, 255, 0.2);
+            border: 2px solid #00f3ff;
+            color: #00f3ff;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 800;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(0, 243, 255, 0.4);
+            transform: translateX(-5px);
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.5);
+        }
+
+        .future-title {
+            text-align: center;
+            font-size: clamp(32px, 6vw, 56px);
+            margin: 80px 0 60px;
+            text-shadow: 0 0 30px #00f3ff;
+        }
+
+        .future-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding-bottom: 100px;
+        }
+
+        .future-card {
+            background: rgba(0, 20, 40, 0.95);
+            border: 2px solid rgba(0, 243, 255, 0.6);
+            border-radius: 10px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.4s;
+            opacity: 0;
+            transform: scale(0.8);
+            position: relative;
+            overflow: visible;
+        }
+
+        /* Bordas superiores e inferiores com glitch */
+        .future-card::before,
+        .future-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    #00f3ff 20%,
+                    #00f3ff 40%,
+                    transparent 50%,
+                    #00f3ff 60%,
+                    #00f3ff 80%,
+                    transparent 100%);
+            background-size: 200% 100%;
+            animation: glitch-border 3s linear infinite;
+            box-shadow: 0 0 10px #00f3ff, 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+
+        .future-card::before {
+            top: -3px;
+        }
+
+        .future-card::after {
+            bottom: -3px;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes glitch-border {
+
+            0%,
+            100% {
+                background-position: 0% 0%;
+                opacity: 1;
+            }
+
+            10% {
+                background-position: 50% 0%;
+                opacity: 0.8;
+            }
+
+            20% {
+                background-position: 100% 0%;
+                opacity: 1;
+            }
+
+            30% {
+                background-position: 150% 0%;
+                opacity: 0.9;
+            }
+
+            40% {
+                background-position: 200% 0%;
+                opacity: 1;
+            }
+
+            50% {
+                background-position: 250% 0%;
+                opacity: 0.7;
+                transform: translateX(-2px);
+            }
+
+            51% {
+                transform: translateX(2px);
+            }
+
+            52% {
+                transform: translateX(0);
+            }
+
+            60% {
+                background-position: 300% 0%;
+                opacity: 1;
+            }
+
+            70% {
+                background-position: 350% 0%;
+                opacity: 0.9;
+            }
+
+            80% {
+                background-position: 400% 0%;
+                opacity: 1;
+            }
+
+            90% {
+                background-position: 450% 0%;
+                opacity: 0.8;
+            }
+        }
+
+        /* Cantos do card */
+        .future-card-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 10px #00f3ff;
+        }
+
+        .future-card-corner.top-left {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .future-card-corner.top-right {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .future-card-corner.bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .future-card-corner.bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .future-card.show {
+            animation: cardAppear 0.5s ease-out forwards;
+        }
+
+        @keyframes cardAppear {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .future-card:hover {
+            border-color: #00f3ff;
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 50px rgba(0, 243, 255, 0.6);
+        }
+
+        .future-card:hover::before,
+        .future-card:hover::after {
+            animation-duration: 1.5s;
+        }
+
+        .future-card-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.8));
+        }
+
+        .future-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        .future-card-notification-icon {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #00f3ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #00f3ff;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+        }
+
+        .future-card-title {
+            font-size: 18px;
+            color: #00f3ff;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.8);
+            letter-spacing: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .future-card-desc {
+            font-size: 16px;
+            color: rgba(0, 243, 255, 0.8);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* MODAL DETALHADO */
+        .detail-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 900;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .detail-modal.active {
+            display: flex;
+        }
+
+        .detail-content {
+            background: rgba(0, 20, 40, 0.98);
+            border: 2px solid rgba(0, 243, 255, 0.6);
+            border-radius: 10px;
+            padding: 60px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 80px rgba(0, 243, 255, 0.8);
+            animation: modalAppear 0.5s ease-out;
+            position: relative;
+        }
+
+        /* Bordas animadas do modal */
+        .detail-content::before,
+        .detail-content::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    #00f3ff 20%,
+                    #00f3ff 40%,
+                    transparent 50%,
+                    #00f3ff 60%,
+                    #00f3ff 80%,
+                    transparent 100%);
+            background-size: 200% 100%;
+            animation: glitch-border 3s linear infinite;
+            box-shadow: 0 0 10px #00f3ff, 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+
+        .detail-content::before {
+            top: -3px;
+        }
+
+        .detail-content::after {
+            bottom: -3px;
+            animation-delay: 1.5s;
+        }
+
+        /* Cantos do modal */
+        .detail-corner {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 10px #00f3ff;
+        }
+
+        .detail-corner.top-left {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .detail-corner.top-right {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .detail-corner.bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .detail-corner.bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) rotate(-5deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .detail-icon {
+            font-size: 80px;
+            text-align: center;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.8));
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(0, 243, 255, 0.4);
+        }
+
+        .detail-notification-icon {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #00f3ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #00f3ff;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.8);
+        }
+
+        .detail-title {
+            font-size: 28px;
+            color: #00f3ff;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 1);
+            letter-spacing: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .detail-text {
+            font-size: 18px;
+            line-height: 1.8;
+            color: rgba(0, 243, 255, 0.9);
+            margin-bottom: 20px;
+        }
+
+        .detail-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .detail-list li {
+            font-size: 16px;
+            color: rgba(0, 243, 255, 0.8);
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .detail-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .detail-close {
+            display: block;
+            margin: 30px auto 0;
+            background: #00f3ff;
+            color: #000;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 50px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .detail-close:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.6);
+        }
+
+        /* BOTÃO FINAL */
+        .final-cta {
+            display: block;
+            margin: 100px auto;
+            background: linear-gradient(135deg, #00ff88, #00f3ff);
+            color: #000;
+            font-size: 36px;
+            font-weight: bold;
+            padding: 35px 90px;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 15px 50px rgba(0, 255, 136, 0.6);
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .final-cta:hover {
+            transform: translateY(-8px) scale(1.08);
+            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.8);
+        }
+
+        .cta-container {
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .section {
+                padding: 40px 20px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .future-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-content {
+                padding: 40px 30px;
+            }
+
+            .back-button {
+                top: 20px;
+                left: 20px;
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="starsCanvas"></canvas>
+
+    <!-- Tela Inicial -->
+    <div class="intro-screen" id="introScreen">
+        <div class="orb" id="orb"></div>
+        <div class="intro-text">
+            Está preparado para começar<span class="dots"><span class="dot">.</span><span class="dot">.</span><span
+                    class="dot">.</span></span>?
+        </div>
+    </div>
+
+    <!-- Tela de Glitch -->
+    <div class="glitch-screen" id="glitchScreen">
+        <div class="glitch-text" id="glitch1">ERRO</div>
+        <div class="glitch-text" id="glitch2">ERRO 404</div>
+        <div class="glitch-text" id="glitch3">VOCÊ NÃO ESTÁ PREPARADO</div>
+        <div class="glitch-text" id="glitch4">VOCÊ NÃO É DIGNO</div>
+        <div class="glitch-text" id="glitch5">VOCÊ ESTÁ ESTAGNADO</div>
+    </div>
+
+    <!-- Tela Branca com IA -->
+    <div class="ai-screen" id="aiScreen">
+        <div class="ai-orb">
+            <div class="ai-ring"></div>
+            <div class="ai-ring"></div>
+            <div class="ai-ring"></div>
+            <div class="ai-core"></div>
+        </div>
+        <div class="ai-question">
+            Você quer mesmo começar o sistema e se lapidar?
+        </div>
+        <button class="ai-button" id="aiButton">COMEÇAR</button>
+    </div>
+
+    <!-- Tela de Loading -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-title">INICIANDO SISTEMA</div>
+        <div class="loading-bar">
+            <div class="loading-fill"></div>
+        </div>
+        <div class="loading-text" id="loadingText">Calculando rotas para disciplina...</div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content" id="mainContent">
+        <div class="section">
+            <h2>O QUE É O JOGO DA DISCIPLINA?</h2>
+            <p>
+                O Jogo da Disciplina é o primeiro sistema gamificado que transforma seus hábitos em um jogo viciante.
+                Cada dia é uma nova missão. Cada conquista é uma vitória real na sua vida.
+            </p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Metas Inteligentes</div>
+                    <div class="feature-desc">Defina objetivos e acompanhe seu progresso em tempo real</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <div class="feature-title">Ranking Global</div>
+                    <div class="feature-desc">Compete com jogadores do mundo inteiro</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <div class="feature-title">Constelação de Hábitos</div>
+                    <div class="feature-desc">Visualize sua evolução como estrelas no céu</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <div class="feature-title">Sequências Épicas</div>
+                    <div class="feature-desc">Mantenha dias consecutivos e aumente seu poder</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Estatísticas Detalhadas</div>
+                    <div class="feature-desc">Veja gráficos e análises do seu progresso</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <div class="feature-title">Notificações Inteligentes</div>
+                    <div class="feature-desc">Lembretes personalizados para seus hábitos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>COMO FUNCIONA?</h2>
+            <p>
+                O sistema usa gamificação avançada para tornar a disciplina divertida.
+                Você ganha XP, sobe de nível, desbloqueia conquistas e compete no ranking global.
+            </p>
+            <p>
+                Cada hábito completado te aproxima da sua melhor versão.
+                O jogo se adapta ao seu ritmo e te mantém motivado todos os dias.
+            </p>
+        </div>
+
+        <button class="think-button" id="thinkButton">PENSE COMO UM DISCIPLINADO</button>
+
+        <div class="section">
+            <h2>RECURSOS DO APLICATIVO</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <div class="feature-title">Calendário de Hábitos</div>
+                    <div class="feature-desc">Visualize todo seu histórico em um calendário interativo</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <div class="feature-title">Horários Personalizados</div>
+                    <div class="feature-desc">Configure quando quer ser lembrado de cada hábito</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎮</div>
+                    <div class="feature-title">Sistema de Níveis</div>
+                    <div class="feature-desc">Evolua seu personagem conforme completa desafios</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏅</div>
+                    <div class="feature-title">Conquistas Desbloqueáveis</div>
+                    <div class="feature-desc">Mais de 50 conquistas para colecionar</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">Competição com Amigos</div>
+                    <div class="feature-desc">Adicione amigos e vejam quem é mais disciplinado</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💪</div>
+                    <div class="feature-title">Desafios Diários</div>
+                    <div class="feature-desc">Novos desafios todos os dias para ganhar XP extra</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>SUA TRANSFORMAÇÃO COMEÇA AGORA</h2>
+            <p>
+                Milhares de pessoas já estão transformando suas vidas com o Jogo da Disciplina.
+                Não porque são especiais, mas porque têm o sistema certo.
+            </p>
+            <div class="cta-container">
+                <a href="#" class="final-cta" id="finalCta">OBTER O JOGO</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Futuro -->
+    <div class="future-screen" id="futureScreen">
+        <button class="back-button" id="backButton">← VOLTAR</button>
+        <h2 class="future-title">SEU FUTURO COMO DISCIPLINADO</h2>
+        <div class="future-grid" id="futureGrid"></div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div class="detail-modal" id="detailModal">
+        <div class="detail-content" id="detailContent"></div>
+    </div>
+
+    <script>
+        const PAYMENT_LINK = ''; // ADICIONE SEU LINK AQUI
+
+        // ELEMENTOS
+        const introScreen = document.getElementById('introScreen');
+        const glitchScreen = document.getElementById('glitchScreen');
+        const aiScreen = document.getElementById('aiScreen');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const mainContent = document.getElementById('mainContent');
+        const futureScreen = document.getElementById('futureScreen');
+        const detailModal = document.getElementById('detailModal');
+        const orb = document.getElementById('orb');
+        const aiButton = document.getElementById('aiButton');
+        const thinkButton = document.getElementById('thinkButton');
+        const backButton = document.getElementById('backButton');
+        const finalCta = document.getElementById('finalCta');
+        const loadingText = document.getElementById('loadingText');
+
+        // SISTEMA DE ÁUDIO
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch (type) {
+                case 'orb-hover':
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+
+                case 'orb-click':
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+
+                case 'glitch':
+                    oscillator.frequency.setValueAtTime(100, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime + 0.05);
+                    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.type = 'square';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+
+                case 'ai-appear':
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+
+                case 'button-hover':
+                    oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.08);
+                    break;
+
+                case 'button-click':
+                    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+
+                case 'loading-tick':
+                    oscillator.frequency.setValueAtTime(700, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+
+                case 'card-appear':
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+
+                case 'modal-open':
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.4);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.4);
+                    break;
+
+                case 'modal-close':
+                    oscillator.frequency.setValueAtTime(900, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.type = 'sine';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+
+                case 'whoosh':
+                    oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.4);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    oscillator.type = 'sawtooth';
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.4);
+                    break;
+            }
+        }
+
+        // Música de fundo ambiente
+        let bgAudio;
+        let isMusicPlaying = false;
+
+        function startBackgroundMusic() {
+            if (isMusicPlaying) return;
+
+            if (!bgAudio) {
+                bgAudio = new Audio('audio.mp3');
+                bgAudio.loop = true;
+                bgAudio.volume = 0.3;
+            }
+
+            bgAudio.play().then(() => {
+                isMusicPlaying = true;
+                console.log('Música iniciada com sucesso');
+            }).catch(error => {
+                console.log('Erro ao iniciar música:', error);
+                // Tentar novamente no primeiro clique
+                document.addEventListener('click', () => {
+                    if (!isMusicPlaying) {
+                        bgAudio.play().then(() => {
+                            isMusicPlaying = true;
+                        }).catch(e => console.log('Erro ao tentar novamente:', e));
+                    }
+                }, { once: true });
+            });
+        }
+
+        // Iniciar música automaticamente ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                startBackgroundMusic();
+            }, 100);
+        });
+
+        // Garantir que a música inicie com qualquer interação do usuário
+        document.addEventListener('click', () => {
+            if (!isMusicPlaying) {
+                startBackgroundMusic();
+            }
+        }, { once: true });
+
+        // CANVAS DE CONSTELAÇÕES
+        const canvas = document.getElementById('starsCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.2;
+                this.speedY = (Math.random() - 0.5) * 0.2;
+                this.opacity = Math.random() * 0.8 + 0.2;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(0, 243, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(0, 243, 255, 0.8)';
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            const starCount = Math.min(Math.floor((canvas.width * canvas.height) / 10000), 200);
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function connectStars() {
+            for (let i = 0; i < stars.length; i++) {
+                for (let j = i + 1; j < stars.length; j++) {
+                    const dx = stars[i].x - stars[j].x;
+                    const dy = stars[i].y - stars[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        ctx.strokeStyle = `rgba(0, 243, 255, ${0.2 * (1 - distance / 100)})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(stars[j].x, stars[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            connectStars();
+            requestAnimationFrame(animateStars);
+        }
+
+        resizeCanvas();
+        initStars();
+        animateStars();
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initStars();
+        });
+
+        // PARTÍCULAS NA IA
+        function createAIParticles() {
+            const aiOrb = document.querySelector('.ai-orb');
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'ai-particle';
+                particle.style.cssText = `
+                    position: absolute;
+                    width: 8px;
+                    height: 8px;
+                    background: #00f3ff;
+                    border-radius: 50%;
+                    box-shadow: 0 0 10px #00f3ff;
+                `;
+                const angle = (i / 12) * Math.PI * 2;
+                const radius = 100;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                particle.style.left = `calc(50% + ${x}px)`;
+                particle.style.top = `calc(50% + ${y}px)`;
+                particle.style.animation = `orbit-particle 3s ease-in-out infinite ${i * 0.1}s`;
+                aiOrb.appendChild(particle);
+            }
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes orbit-particle {
+                0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+                50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.3; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // HOVER NA BOLINHA
+        orb.addEventListener('mouseenter', () => {
+            playSound('orb-hover');
+        });
+
+        // CLIQUE NA BOLINHA
+        orb.addEventListener('click', () => {
+            playSound('orb-click');
+            introScreen.classList.add('hidden');
+            setTimeout(() => {
+                glitchScreen.classList.add('active');
+                showGlitchMessages();
+            }, 500);
+        });
+
+        // MENSAGENS DE GLITCH
+        function showGlitchMessages() {
+            const messages = ['glitch1', 'glitch2', 'glitch3', 'glitch4', 'glitch5'];
+            let delay = 0;
+
+            messages.forEach((id, index) => {
+                setTimeout(() => {
+                    playSound('glitch');
+                    document.getElementById(id).classList.add('show');
+                }, delay);
+                delay += 800;
+            });
+
+            setTimeout(() => {
+                playSound('whoosh');
+                glitchScreen.classList.remove('active');
+                aiScreen.classList.add('active');
+                createAIParticles();
+                setTimeout(() => playSound('ai-appear'), 100);
+            }, delay + 1000);
+        }
+
+        // BOTÃO DA IA
+        aiButton.addEventListener('mouseenter', () => {
+            playSound('button-hover');
+        });
+
+        aiButton.addEventListener('click', () => {
+            playSound('button-click');
+            aiScreen.classList.remove('active');
+            loadingScreen.classList.add('active');
+            startLoading();
+        });
+
+        // LOADING
+        function startLoading() {
+            const messages = [
+                'Calculando rotas para disciplina...',
+                'Calculando rotas para progresso...',
+                'Calculando rotas para melhoria...',
+                'Sistema pronto!'
+            ];
+            let index = 0;
+
+            const interval = setInterval(() => {
+                if (index < messages.length) {
+                    playSound('loading-tick');
+                    loadingText.textContent = messages[index];
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        playSound('whoosh');
+                        loadingScreen.classList.remove('active');
+                        mainContent.classList.add('active');
+                        startGlitchEffect();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        // MINI GLITCHES AO SCROLLAR
+        function startGlitchEffect() {
+            const sections = document.querySelectorAll('.section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.dataset.glitched) {
+                        if (Math.random() > 0.5) {
+                            playSound('glitch');
+                            entry.target.classList.add('glitch-active');
+                            setTimeout(() => {
+                                entry.target.classList.remove('glitch-active');
+                            }, 200);
+                        }
+                        entry.target.dataset.glitched = 'true';
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            sections.forEach(section => observer.observe(section));
+        }
+
+        // DADOS DOS CARDS DE FUTURO
+        const futureCards = [
+            {
+                icon: '🏋️',
+                title: 'Corpo Transformado',
+                desc: 'Transforme seu físico em 6 meses com disciplina',
+                details: {
+                    text: 'Com disciplina consistente, você pode transformar completamente seu corpo. O Jogo da Disciplina te ajuda a:',
+                    list: [
+                        'Manter rotina de treinos sem falhas',
+                        'Seguir dieta com facilidade',
+                        'Ganhar massa muscular ou perder gordura',
+                        'Desenvolver hábitos saudáveis permanentes',
+                        'Ver resultados visíveis em semanas',
+                        'Superar platôs e continuar evoluindo'
+                    ]
+                }
+            },
+            {
+                icon: '💼',
+                title: 'Carreira de Sucesso',
+                desc: 'Pessoas disciplinadas ganham 3x mais',
+                details: {
+                    text: 'A disciplina é o maior diferencial no mercado de trabalho. Com o jogo você vai:',
+                    list: [
+                        'Aumentar sua produtividade drasticamente',
+                        'Conquistar promoções mais rápido',
+                        'Desenvolver habilidades valiosas',
+                        'Ser reconhecido como referência',
+                        'Abrir portas para novas oportunidades',
+                        'Triplicar seus ganhos em 1-2 anos'
+                    ]
+                }
+            },
+            {
+                icon: '🎓',
+                title: 'Conhecimento Infinito',
+                desc: 'Domine qualquer habilidade em 1 ano',
+                details: {
+                    text: 'Estudando apenas 1 hora por dia com disciplina, você pode dominar qualquer área:',
+                    list: [
+                        'Aprender novos idiomas fluentemente',
+                        'Dominar programação e tecnologia',
+                        'Passar em concursos e vestibulares',
+                        'Desenvolver expertise em sua área',
+                        'Ler 50+ livros por ano',
+                        'Tornar-se autoridade no que faz'
+                    ]
+                }
+            },
+            {
+                icon: '🧠',
+                title: 'Mentalidade Inabalável',
+                desc: 'Desenvolva força mental de aço',
+                details: {
+                    text: 'A disciplina fortalece sua mente de forma permanente:',
+                    list: [
+                        'Eliminar procrastinação completamente',
+                        'Desenvolver foco laser em qualquer tarefa',
+                        'Superar ansiedade e depressão',
+                        'Tomar decisões com clareza',
+                        'Manter calma sob pressão',
+                        'Construir autoconfiança inabalável'
+                    ]
+                }
+            },
+            {
+                icon: '💰',
+                title: 'Liberdade Financeira',
+                desc: 'Construa riqueza com hábitos certos',
+                details: {
+                    text: 'Disciplina financeira é a chave para a riqueza:',
+                    list: [
+                        'Economizar e investir consistentemente',
+                        'Eliminar dívidas de forma sistemática',
+                        'Criar múltiplas fontes de renda',
+                        'Construir patrimônio sólido',
+                        'Alcançar independência financeira',
+                        'Viver sem preocupações com dinheiro'
+                    ]
+                }
+            },
+            {
+                icon: '❤️',
+                title: 'Relacionamentos Melhores',
+                desc: 'Seja a melhor versão para quem ama',
+                details: {
+                    text: 'Pessoas disciplinadas têm relacionamentos mais saudáveis:',
+                    list: [
+                        'Ser mais presente e atencioso',
+                        'Cumprir promessas e compromissos',
+                        'Inspirar pessoas ao seu redor',
+                        'Atrair relacionamentos de qualidade',
+                        'Ser exemplo para filhos e família',
+                        'Construir confiança e respeito'
+                    ]
+                }
+            },
+            {
+                icon: '🌟',
+                title: 'Propósito e Realização',
+                desc: 'Viva com significado todos os dias',
+                details: {
+                    text: 'A disciplina te conecta com seu propósito de vida:',
+                    list: [
+                        'Acordar motivado todos os dias',
+                        'Sentir orgulho de si mesmo',
+                        'Realizar sonhos que pareciam impossíveis',
+                        'Deixar um legado positivo',
+                        'Viver sem arrependimentos',
+                        'Experimentar felicidade genuína'
+                    ]
+                }
+            },
+            {
+                icon: '⚡',
+                title: 'Energia Ilimitada',
+                desc: 'Tenha disposição o dia todo',
+                details: {
+                    text: 'Hábitos disciplinados geram energia, não consomem:',
+                    list: [
+                        'Acordar cedo sem esforço',
+                        'Manter energia alta o dia todo',
+                        'Eliminar cansaço e fadiga',
+                        'Dormir melhor e recuperar mais rápido',
+                        'Ter disposição para tudo que importa',
+                        'Sentir-se 10 anos mais jovem'
+                    ]
+                }
+            },
+            {
+                icon: '🎯',
+                title: 'Metas Conquistadas',
+                desc: 'Realize todos seus objetivos',
+                details: {
+                    text: 'Com o sistema certo, nenhuma meta é impossível:',
+                    list: [
+                        'Definir objetivos claros e alcançáveis',
+                        'Criar planos de ação efetivos',
+                        'Manter consistência até o fim',
+                        'Superar obstáculos com facilidade',
+                        'Celebrar vitórias regularmente',
+                        'Conquistar 10x mais que antes'
+                    ]
+                }
+            },
+            {
+                icon: '🚀',
+                title: 'Evolução Constante',
+                desc: 'Melhore 1% todos os dias',
+                details: {
+                    text: 'O poder dos pequenos ganhos compostos:',
+                    list: [
+                        'Melhorar 1% ao dia = 37x melhor em 1 ano',
+                        'Criar momentum imparável',
+                        'Superar sua versão anterior sempre',
+                        'Nunca estagnar ou regredir',
+                        'Tornar-se irreconhecível em 6 meses',
+                        'Alcançar seu máximo potencial'
+                    ]
+                }
+            }
+        ];
+
+        // BOTÃO PENSE COMO DISCIPLINADO
+        thinkButton.addEventListener('mouseenter', () => {
+            playSound('button-hover');
+        });
+
+        thinkButton.addEventListener('click', () => {
+            playSound('button-click');
+            playSound('whoosh');
+            mainContent.classList.add('hidden');
+            futureScreen.classList.add('active');
+            showFutureCards();
+        });
+
+        // BOTÃO VOLTAR
+        backButton.addEventListener('mouseenter', () => {
+            playSound('button-hover');
+        });
+
+        backButton.addEventListener('click', () => {
+            playSound('button-click');
+            playSound('whoosh');
+            futureScreen.classList.remove('active');
+            mainContent.classList.remove('hidden');
+        });
+
+        // MOSTRAR CARDS DE FUTURO
+        function showFutureCards() {
+            const grid = document.getElementById('futureGrid');
+            grid.innerHTML = '';
+
+            futureCards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'future-card';
+                cardEl.innerHTML = `
+                    <div class="future-card-corner top-left"></div>
+                    <div class="future-card-corner top-right"></div>
+                    <div class="future-card-corner bottom-left"></div>
+                    <div class="future-card-corner bottom-right"></div>
+                    <div class="future-card-icon">${card.icon}</div>
+                    <div class="future-card-header">
+                        <div class="future-card-notification-icon">!</div>
+                        <div class="future-card-title">NOTIFICATION</div>
+                    </div>
+                    <div class="future-card-desc">${card.desc}</div>
+                `;
+
+                cardEl.addEventListener('mouseenter', () => {
+                    playSound('button-hover');
+                });
+
+                cardEl.addEventListener('click', () => {
+                    playSound('button-click');
+                    showDetail(card);
+                });
+
+                grid.appendChild(cardEl);
+
+                setTimeout(() => {
+                    playSound('card-appear');
+                    cardEl.classList.add('show');
+                }, index * 1000);
+            });
+        }
+
+        // MOSTRAR DETALHES
+        function showDetail(card) {
+            playSound('modal-open');
+            const content = document.getElementById('detailContent');
+
+            let listHTML = '';
+            if (card.details.list) {
+                listHTML = '<ul class="detail-list">';
+                card.details.list.forEach(item => {
+                    listHTML += `<li>${item}</li>`;
+                });
+                listHTML += '</ul>';
+            }
+
+            content.innerHTML = `
+                <div class="detail-corner top-left"></div>
+                <div class="detail-corner top-right"></div>
+                <div class="detail-corner bottom-left"></div>
+                <div class="detail-corner bottom-right"></div>
+                <div class="detail-icon">${card.icon}</div>
+                <div class="detail-header">
+                    <div class="detail-notification-icon">!</div>
+                    <div class="detail-title">NOTIFICATION</div>
+                </div>
+                <p class="detail-text">${card.details.text}</p>
+                ${listHTML}
+                <button class="detail-close" onclick="closeDetail()">ENTENDI</button>
+            `;
+
+            detailModal.classList.add('active');
+
+            // Adicionar som ao botão de fechar
+            setTimeout(() => {
+                const closeBtn = content.querySelector('.detail-close');
+                closeBtn.addEventListener('mouseenter', () => {
+                    playSound('button-hover');
+                });
+                closeBtn.addEventListener('click', () => {
+                    playSound('button-click');
+                });
+            }, 100);
+        }
+
+        function closeDetail() {
+            playSound('modal-close');
+            detailModal.classList.remove('active');
+        }
+
+        // FECHAR MODAL CLICANDO FORA
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) {
+                closeDetail();
+            }
+        });
+
+        // BOTÃO FINAL
+        finalCta.addEventListener('mouseenter', () => {
+            playSound('button-hover');
+        });
+
+        finalCta.addEventListener('click', (e) => {
+            e.preventDefault();
+            playSound('button-click');
+            if (!PAYMENT_LINK) {
+                alert('⚠️ Configure o link de pagamento na variável PAYMENT_LINK');
+                return;
+            }
+            window.location.href = PAYMENT_LINK;
+        });
+
+        // SMOOTH SCROLL
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // ADICIONAR SONS AOS FEATURE CARDS
+        function addSoundsToFeatureCards() {
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    playSound('button-hover');
+                });
+            });
+        }
+
+        // Adicionar sons quando o conteúdo principal aparecer
+        const mainContentObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.classList.contains('active')) {
+                    setTimeout(addSoundsToFeatureCards, 500);
+                    mainContentObserver.disconnect();
+                }
+            });
+        });
+
+        mainContentObserver.observe(mainContent, { attributes: true, attributeFilter: ['class'] });
+    </script>
+</body>
+
+</html>
